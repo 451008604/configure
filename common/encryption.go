@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ func test() {
 	// var privateKey = []byte(``)
 	// var publicKey = []byte(``)
 	//
-	_ = RsaGenKey(1024, "RsaPrivateKey.txt", "RsaPublicKey.txt")
+	// _ = RsaGenKey(256, "RsaPrivateKey.txt", "RsaPublicKey.txt")
 	// cipherText := RSAEncrypt([]byte("测试数据"), publicKey)
 	// plainText := RSADecrypt(cipherText, privateKey)
 	// println(string(plainText))
@@ -25,10 +25,9 @@ func test() {
 	// encryptData, _ := AesCtrEncrypt([]byte("测试数据"), []byte(keyIv))
 	// text, _ := AesCtrDecrypt(encryptData, []byte(keyIv))
 	// println(string(text))
-
 }
 
-// RsaGenKey 生成RSA公钥和私钥并保存在对应的目录文件下。参数bits: 指定生成的秘钥的长度, 单位: bit
+// 生成RSA公钥和私钥并保存在对应的目录文件下。参数bits: 指定生成的秘钥的长度, 单位: bit
 func RsaGenKey(bits int, privatePath, publicPath string) error {
 	// 1. 生成私钥文件
 	// GenerateKey函数使用随机数据生成器random生成一对具有指定字位数的RSA密钥
@@ -91,46 +90,46 @@ func RsaGenKey(bits int, privatePath, publicPath string) error {
 	return nil
 }
 
-// RSAEncrypt RSA公钥加密
-func RSAEncrypt(src []byte, buf []byte) []byte {
+// RSA公钥加密
+func RSAEncrypt(src []byte, publicKey []byte) []byte {
 	// 从数据中找出pem格式的块
-	block, _ := pem.Decode(buf)
+	block, _ := pem.Decode(publicKey)
 	if block == nil {
 		return nil
 	}
 
 	// 解析一个der编码的公钥
-	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return nil
 	}
 
 	// 公钥加密
-	result, _ := rsa.EncryptPKCS1v15(rand.Reader, publicKey.(*rsa.PublicKey), src)
+	result, _ := rsa.EncryptPKCS1v15(rand.Reader, key.(*rsa.PublicKey), src)
 	return result
 }
 
-// RSADecrypt RSA私钥解密
-func RSADecrypt(src []byte, buf []byte) []byte {
+// RSA私钥解密
+func RSADecrypt(src []byte, privateKey []byte) []byte {
 	// 从数据中解析出pem块
-	block, _ := pem.Decode(buf)
+	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return nil
 	}
 
 	// 解析出一个der编码的私钥
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 
 	// 私钥解密
-	result, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, src)
+	result, err := rsa.DecryptPKCS1v15(rand.Reader, key, src)
 	if err != nil {
 		return nil
 	}
 	return result
 }
 
-// AesCtrEncrypt AesCtr模式对称加密
-func AesCtrEncrypt(plainText, key []byte) ([]byte, error) {
+// AesCtr模式对称加密
+func AesEncryptCtrMode(plainText, key []byte) ([]byte, error) {
 	// 创建aes对象
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -146,7 +145,7 @@ func AesCtrEncrypt(plainText, key []byte) ([]byte, error) {
 	return dst, nil
 }
 
-// AesCtrDecrypt AesCtr模式对称解密
-func AesCtrDecrypt(encryptData, key []byte) ([]byte, error) {
-	return AesCtrEncrypt(encryptData, key)
+// AesCtr模式对称解密
+func AesDecryptCtrMode(encryptData, key []byte) ([]byte, error) {
+	return AesEncryptCtrMode(encryptData, key)
 }

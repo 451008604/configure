@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"github.com/google/uuid"
+	"configure/common"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -11,31 +11,58 @@ import (
 var (
 	rsaPriKey = []byte{}
 	rsaPubKey = []byte{}
+	aesKey    = []byte("qzqlkjiiosdflknx")
+	whiteList = []string{}
 )
 
 func main() {
+	// 设置白名单列表
+	fileByte, _ := os.ReadFile("whitelist.txt")
+	whiteList = strings.Split(string(fileByte), "\r\n")
+	for _, str := range whiteList {
+		if net.ParseIP(str) == nil {
+			ips, _ := net.LookupHost(str)
+			whiteList = append(whiteList, ips...)
+		}
+	}
+
+	// 设置rsa密钥
 	rsaPriKey, _ = os.ReadFile("RsaPrivateKey.txt")
 	rsaPubKey, _ = os.ReadFile("RsaPublicKey.txt")
 	if len(rsaPriKey) == 0 || len(rsaPubKey) == 0 {
 		return
 	}
 
-	http.HandleFunc("/abc", ReceiveHandler)
-	println(http.ListenAndServe(":6259", nil))
+	key, _ := os.ReadFile("./cert/cert.key")
+	pem, _ := os.ReadFile("./cert/cert.pem")
+
+	http.HandleFunc("/configFile", ReceiveHandler)
+	if len(key) != 0 && len(pem) != 0 {
+		println(http.ListenAndServeTLS(":6001", string(pem), string(key), nil))
+	} else {
+		println(http.ListenAndServe(":6001", nil))
+	}
 }
 
 func ReceiveHandler(writer http.ResponseWriter, request *http.Request) {
-	var req = []byte(request.URL.Query().Get("text"))
+	// 白名单校验
+	isExist := false
+	for _, ip := range whiteList {
+		if ip == strings.Split(request.RemoteAddr, ":")[0] {
+			isExist = true
+		}
+	}
+	if !isExist {
+		return
+	}
 
-	random, _ := uuid.NewRandom()
-	aesKey := strings.ReplaceAll(random.String(), "-", "")[:16]
-	var res = req
-	// 公钥加密aesKey
-	tempAesKey := RSAEncrypt([]byte(aesKey), rsaPubKey)
-	res = append(res, []byte(fmt.Sprintf("\ntempAesKey -> %v\n", tempAesKey))...)
+	var req = []byte(request.URL.Query().Get("fileName"))
+	fileByte, err := os.ReadFile("./conf/" + string(req))
+	if err != nil || len(fileByte) == 0 {
+		return
+	}
 
-	encrypt, _ := AesCtrEncrypt(req, []byte(aesKey))
-	res = append(res, []byte(fmt.Sprintf("encrypt -> %v\n", encrypt))...)
-
-	_, _ = writer.Write(res)
+	// aes加密后返回
+	encrypt, _ := common.AesEncryptCtrMode(fileByte, aesKey)
+	_, _ = writer.Write(encrypt)
 }
