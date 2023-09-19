@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+    # 配置服务
+    configure_server:
+        image: ccr.ccs.tencentyun.com/451008604/configure:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "6001:6001"
+        environment:
+            # AES密钥 长度必须（16/24/32）位之中
+            AES_KEY: "1234567890123456"
+        volumes:
+            - "~/Documents/docker_volumes/configure/conf:/app/conf"
+            - "~/Documents/docker_volumes/configure/cert:/app/cert"
+            - "~/Documents/docker_volumes/configure/whitelist.txt:/app/whitelist.txt"
+        restart: always
+        networks:
+            configure_gateway:
+                ipv4_address: 172.25.0.2
+# 网关
+networks:
+    configure_gateway:
+        ipam:
+            config:
+                -   subnet: 172.25.0.1/16
+                    gateway: 172.25.0.1

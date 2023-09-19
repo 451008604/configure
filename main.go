@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	rsaPriKey = []byte{}
-	rsaPubKey = []byte{}
+	// rsaPriKey = []byte{}
+	// rsaPubKey = []byte{}
 	aesKey    = []byte("qzqlkjiiosdflknx")
 	whiteList = []string{}
 )
@@ -18,7 +18,7 @@ var (
 func main() {
 	// 设置白名单列表
 	fileByte, _ := os.ReadFile("whitelist.txt")
-	whiteList = strings.Split(string(fileByte), "\r\n")
+	whiteList = strings.Split(strings.ReplaceAll(string(fileByte), "\r", ""), "\n")
 	for _, str := range whiteList {
 		if net.ParseIP(str) == nil {
 			ips, _ := net.LookupHost(str)
@@ -27,15 +27,18 @@ func main() {
 	}
 
 	// 设置rsa密钥
-	rsaPriKey, _ = os.ReadFile("RsaPrivateKey.txt")
-	rsaPubKey, _ = os.ReadFile("RsaPublicKey.txt")
-	if len(rsaPriKey) == 0 || len(rsaPubKey) == 0 {
-		return
+	// rsaPriKey, _ = os.ReadFile("RsaPrivateKey.txt")
+	// rsaPubKey, _ = os.ReadFile("RsaPublicKey.txt")
+	// if len(rsaPriKey) == 0 || len(rsaPubKey) == 0 {
+	// 	return
+	// }
+
+	if getenv := os.Getenv("AES_KEY"); len(getenv) == 16 || len(getenv) == 24 || len(getenv) == 32 {
+		aesKey = []byte(getenv)
 	}
 
 	key, _ := os.ReadFile("./cert/cert.key")
 	pem, _ := os.ReadFile("./cert/cert.pem")
-
 	http.HandleFunc("/configFile", ReceiveHandler)
 	if len(key) != 0 && len(pem) != 0 {
 		println(http.ListenAndServeTLS(":6001", string(pem), string(key), nil))
@@ -50,15 +53,18 @@ func ReceiveHandler(writer http.ResponseWriter, request *http.Request) {
 	for _, ip := range whiteList {
 		if ip == strings.Split(request.RemoteAddr, ":")[0] {
 			isExist = true
+			break
 		}
 	}
 	if !isExist {
+		println("RemoteAddr err -> ", request.RemoteAddr)
 		return
 	}
 
 	var req = []byte(request.URL.Query().Get("fileName"))
 	fileByte, err := os.ReadFile("./conf/" + string(req))
 	if err != nil || len(fileByte) == 0 {
+		println(err.Error())
 		return
 	}
 
