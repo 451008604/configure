@@ -11,7 +11,7 @@ import (
 var (
 	// rsaPriKey = []byte{}
 	// rsaPubKey = []byte{}
-	aesKey    = []byte("qzqlkjiiosdflknx")
+	aesKey    = []byte("")
 	whiteList = []string{}
 )
 
@@ -68,7 +68,11 @@ func ReceiveHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// aes加密后返回
-	encrypt, _ := common.AesEncryptCtrMode(fileByte, aesKey)
-	_, _ = writer.Write(encrypt)
+	if len(aesKey) != 0 {
+		// aes加密后返回
+		encrypt, _ := common.AesEncryptCtrMode(fileByte, aesKey)
+		_, _ = writer.Write(encrypt)
+	} else {
+		_, _ = writer.Write(fileByte)
+	}
 }

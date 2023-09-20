@@ -11,7 +11,7 @@ services:
             - "6001:6001"
         environment:
             # AES密钥 长度必须（16/24/32）位之中
-            AES_KEY: "1234567890123456"
+            AES_KEY: ""
         volumes:
             - "~/Documents/docker_volumes/configure/conf:/app/conf"
             - "~/Documents/docker_volumes/configure/cert:/app/cert"
