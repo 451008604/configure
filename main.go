@@ -12,20 +12,10 @@ var (
 	// rsaPriKey = []byte{}
 	// rsaPubKey = []byte{}
 	aesKey    = []byte("")
-	whiteList = []string{}
+	whiteList []string
 )
 
 func main() {
-	// 设置白名单列表
-	fileByte, _ := os.ReadFile("whitelist.txt")
-	whiteList = strings.Split(strings.ReplaceAll(string(fileByte), "\r", ""), "\n")
-	for _, str := range whiteList {
-		if net.ParseIP(str) == nil {
-			ips, _ := net.LookupHost(str)
-			whiteList = append(whiteList, ips...)
-		}
-	}
-
 	// 设置rsa密钥
 	// rsaPriKey, _ = os.ReadFile("RsaPrivateKey.txt")
 	// rsaPubKey, _ = os.ReadFile("RsaPublicKey.txt")
@@ -48,6 +38,8 @@ func main() {
 }
 
 func ReceiveHandler(writer http.ResponseWriter, request *http.Request) {
+	formatHostIp()
+
 	// 白名单校验
 	isExist := false
 	for _, ip := range whiteList {
@@ -74,5 +66,17 @@ func ReceiveHandler(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write(encrypt)
 	} else {
 		_, _ = writer.Write(fileByte)
+	}
+}
+
+func formatHostIp() {
+	// 设置白名单列表
+	fileByte, _ := os.ReadFile("whitelist.txt")
+	whiteList = strings.Split(strings.ReplaceAll(string(fileByte), "\r", ""), "\n")
+	for _, str := range whiteList {
+		if net.ParseIP(str) == nil {
+			ips, _ := net.LookupHost(str)
+			whiteList = append(whiteList, ips...)
+		}
 	}
 }
