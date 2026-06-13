@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"gopkg.in/yaml.v3"
 )
 
 const ExtendsField = "__extends"
@@ -32,30 +34,44 @@ func GetConfigManager() *ConfigManager {
 }
 
 func (cm *ConfigManager) Load() error {
-	files, err := os.ReadDir("conf")
-	if err != nil {
-		return err
-	}
-
 	newConfigs := make(map[string]map[string]interface{})
 	newRawFiles := make(map[string][]byte)
 
-	for _, file := range files {
-		if file.IsDir() || !strings.HasSuffix(file.Name(), ".json") {
-			continue
-		}
-		path := filepath.Join("conf", file.Name())
-		data, err := os.ReadFile(path)
+	dirs := []string{"conf/json", "conf/yml"}
+	for _, dir := range dirs {
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
-		newRawFiles[file.Name()] = data
 
-		var cfg map[string]interface{}
-		if err := json.Unmarshal(data, &cfg); err != nil {
-			continue
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+			name := file.Name()
+			if !strings.HasSuffix(name, ".json") && !strings.HasSuffix(name, ".yml") && !strings.HasSuffix(name, ".yaml") {
+				continue
+			}
+
+			path := filepath.Join(dir, name)
+			data, err := os.ReadFile(path)
+			if err != nil {
+				continue
+			}
+			newRawFiles[name] = data
+
+			var cfg map[string]interface{}
+			if strings.HasSuffix(name, ".json") {
+				if err := json.Unmarshal(data, &cfg); err != nil {
+					continue
+				}
+			} else {
+				if err := yaml.Unmarshal(data, &cfg); err != nil {
+					continue
+				}
+			}
+			newConfigs[name] = cfg
 		}
-		newConfigs[file.Name()] = cfg
 	}
 
 	cm.mu.Lock()
@@ -72,8 +88,15 @@ func (cm *ConfigManager) GetConfig(name string) ([]byte, error) {
 	if name == "" {
 		name = "base.json"
 	}
-	if !strings.HasSuffix(name, ".json") {
-		name = name + ".json"
+
+	if !strings.HasSuffix(name, ".json") && !strings.HasSuffix(name, ".yml") && !strings.HasSuffix(name, ".yaml") {
+		if _, ok := cm.configs[name+".json"]; ok {
+			name = name + ".json"
+		} else if _, ok := cm.configs[name+".yml"]; ok {
+			name = name + ".yml"
+		} else {
+			name = name + ".json"
+		}
 	}
 
 	merged, err := cm.resolveConfig(name, 0, make(map[string]bool))
@@ -124,8 +147,12 @@ func (cm *ConfigManager) resolveConfig(name string, depth int, visited map[strin
 	if hasExtends {
 		parentName, ok := extends.(string)
 		if ok && parentName != "" {
-			if !strings.HasSuffix(parentName, ".json") {
-				parentName = parentName + ".json"
+			if !strings.HasSuffix(parentName, ".json") && !strings.HasSuffix(parentName, ".yml") && !strings.HasSuffix(parentName, ".yaml") {
+				if strings.HasSuffix(name, ".json") {
+					parentName = parentName + ".json"
+				} else {
+					parentName = parentName + ".yml"
+				}
 			}
 			parent, err := cm.resolveConfig(parentName, depth+1, visited)
 			if err != nil {

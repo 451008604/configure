@@ -1,0 +1,24 @@
+Debug: true
+AppName: yml-socketserver
+Version: v1.0
+MaxPackSize: 8192
+MaxConn: 2000
+WorkerPoolSize: 2000
+WorkerTaskMaxLen: 2000
+MaxMsgChanLen: 200
+ProtocolIsJson: true
+ServerTCP:
+  Address: 0.0.0.0
+  Port: "18001"
+ServerWS:
+  Address: 0.0.0.0
+  Port: "18002"
+  TLSCertPath: ""
+  TLSKeyPath: ""
+Redis:
+  Address: 127.0.0.1:6390
+  Password: ""
+Mysql:
+  Address: ""
+  Username: ""
+  Password: ""

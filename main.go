@@ -233,7 +233,11 @@ func ReceiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileByte, err := os.ReadFile("./conf/" + fileName)
+	filePath := "./conf/json/" + fileName
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		filePath = "./conf/yml/" + fileName
+	}
+	fileByte, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Printf("failed to read file %s: %v", fileName, err)
 		http.Error(w, "File not found", http.StatusNotFound)
@@ -305,9 +309,12 @@ func watchConfigChanges() {
 	}
 	defer watcher.Close()
 
-	if err := watcher.Add("conf"); err != nil {
-		log.Printf("failed to watch conf: %v", err)
+	if err := watcher.Add("conf/json"); err != nil {
+		log.Printf("failed to watch conf/json: %v", err)
 		return
+	}
+	if err := watcher.Add("conf/yml"); err != nil {
+		log.Printf("failed to watch conf/yml: %v", err)
 	}
 
 	for {
@@ -316,7 +323,7 @@ func watchConfigChanges() {
 			if !ok {
 				return
 			}
-			if !strings.HasSuffix(event.Name, ".json") {
+			if !strings.HasSuffix(event.Name, ".json") && !strings.HasSuffix(event.Name, ".yml") && !strings.HasSuffix(event.Name, ".yaml") {
 				continue
 			}
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
@@ -325,14 +332,14 @@ func watchConfigChanges() {
 					log.Printf("failed to reload config: %v", err)
 					continue
 				}
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			fileName := filepath.Base(event.Name)
-			msg := fmt.Sprintf(`{"event":"config_changed","file":"%s"}`, fileName)
-			log.Printf("[REDIS] Publishing config change: %s", msg)
-			if err := common.PublishConfigChange(ctx, "config_updates", msg); err != nil {
-				log.Printf("[REDIS] Failed to publish config change: %v", err)
-			}
-			cancel()
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				fileName := filepath.Base(event.Name)
+				msg := fmt.Sprintf(`{"event":"config_changed","file":"%s"}`, fileName)
+				log.Printf("[REDIS] Publishing config change: %s", msg)
+				if err := common.PublishConfigChange(ctx, "config_updates", msg); err != nil {
+					log.Printf("[REDIS] Failed to publish config change: %v", err)
+				}
+				cancel()
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {

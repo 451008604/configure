@@ -1,0 +1,5 @@
+__extends: base.yml
+Debug: false
+ServerTCP:
+  Port: "28001"
+AppName: yml-sub-service
