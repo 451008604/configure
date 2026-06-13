@@ -24,7 +24,6 @@ var (
 	whiteList []string       // IP白名单列表
 	wlMu      sync.RWMutex   // 白名单读写锁，保证并发安全
 	lastWlMod time.Time      // 白名单文件最后修改时间，用于缓存判断
-	logger    *log.Logger    // 自定义日志记录器
 )
 
 // 日志轮转配置
@@ -106,7 +105,6 @@ func initLogger() {
 		log.Fatalf("failed to open log file: %v", err)
 	}
 	rotator := &logRotator{file: logFile}
-	logger = log.New(rotator, "", log.LstdFlags)
 	log.SetOutput(rotator)
 	log.SetFlags(log.LstdFlags)
 }
@@ -169,11 +167,11 @@ func logRequest(handler http.HandlerFunc) http.HandlerFunc {
 		start := time.Now()
 		ip := extractIP(r.RemoteAddr)
 		log.Printf("[REQUEST] %s %s from %s", r.Method, r.URL.String(), ip)
-		
+
 		// 使用自定义 responseWriter 捕获状态码
 		writer := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		handler(writer, r)
-		
+
 		log.Printf("[RESPONSE] %s %s from %s - status: %d, duration: %v", r.Method, r.URL.String(), ip, writer.statusCode, time.Since(start))
 	}
 }
