@@ -18,8 +18,8 @@ const ExtendsField = "__extends"
 const MaxExtendsDepth = 10
 
 var (
-	configManager *ConfigManager  // 全局配置管理器实例
-	configOnce    sync.Once        // 保证配置管理器只初始化一次
+	configManager *ConfigManager // 全局配置管理器实例
+	configOnce    sync.Once      // 保证配置管理器只初始化一次
 )
 
 // ConfigManager 配置管理器
@@ -29,8 +29,8 @@ var (
 // 线程安全，使用 RWMutex 保证并发访问安全
 type ConfigManager struct {
 	mu       sync.RWMutex
-	configs  map[string]map[string]interface{}  // 已解析的配置文件映射
-	rawFiles map[string][]byte                   // 原始文件内容，用于 IP 覆盖解析
+	configs  map[string]map[string]interface{} // 已解析的配置文件映射
+	rawFiles map[string][]byte                 // 原始文件内容，用于 IP 覆盖解析
 }
 
 // GetConfigManager 获取配置管理器单例
@@ -228,9 +228,10 @@ func deepCopyMap(m map[string]interface{}) map[string]interface{} {
 // deepMerge 深度合并两个 map
 // 对于嵌套对象，递归合并而非直接替换
 // 例如：
-//   dst: {"ServerTCP": {"Address": "127.0.0.1", "Port": "17001"}}
-//   src: {"ServerTCP": {"Port": "27001"}}
-//   结果: {"ServerTCP": {"Address": "127.0.0.1", "Port": "27001"}}
+//
+//	dst: {"ServerTCP": {"Address": "127.0.0.1", "Port": "17001"}}
+//	src: {"ServerTCP": {"Port": "27001"}}
+//	结果: {"ServerTCP": {"Address": "127.0.0.1", "Port": "27001"}}
 func deepMerge(dst, src map[string]interface{}) {
 	for k, v := range src {
 		if vm, ok := v.(map[string]interface{}); ok {

@@ -20,15 +20,15 @@ import (
 
 // 全局变量定义
 var (
-	aesKey    = []byte("")   // AES加密密钥，从环境变量 AES_KEY 读取
-	whiteList []string       // IP白名单列表
-	wlMu      sync.RWMutex   // 白名单读写锁，保证并发安全
-	lastWlMod time.Time      // 白名单文件最后修改时间，用于缓存判断
+	aesKey    = []byte("") // AES加密密钥，从环境变量 AES_KEY 读取
+	whiteList []string     // IP白名单列表
+	wlMu      sync.RWMutex // 白名单读写锁，保证并发安全
+	lastWlMod time.Time    // 白名单文件最后修改时间，用于缓存判断
 )
 
 // 日志轮转配置
-const logMaxLines = 300   // 日志文件最大行数
-const logTrimLines = 200  // 超过最大行数时删除的行数
+const logMaxLines = 300  // 日志文件最大行数
+const logTrimLines = 200 // 超过最大行数时删除的行数
 
 // logRotator 自定义日志写入器，支持自动轮转
 // 当日志行数超过 logMaxLines 时，自动删除前 logTrimLines 行
