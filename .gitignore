@@ -1,0 +1,20 @@
+# Build artifacts
+configure
+
+# IDE
+.idea/
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+
+# CodeGraph index
+.codegraph/
+
+# OS
+.DS_Store
+
+# Dependencies
+vendor/

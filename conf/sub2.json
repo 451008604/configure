@@ -1,0 +1,7 @@
+{
+  "__extends": "sub1.json",
+  "AppName": "sub2-service",
+  "Redis": {
+    "Address": "127.0.0.1:6390"
+  }
+}

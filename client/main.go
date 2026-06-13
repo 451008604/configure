@@ -18,14 +18,16 @@ func GetRemoteConfigData(fileName string) []byte {
 	if err != nil {
 		return nil
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
+	defer resp.Body.Close()
 
-	// 读取并打印响应主体
-	if body, _ := io.ReadAll(resp.Body); len(body) != 0 {
-		mode, _ := common.AesDecryptCtrMode(body, aesKey)
-		return mode
+	body, err := io.ReadAll(resp.Body)
+	if err != nil || len(body) == 0 {
+		return nil
 	}
-	return nil
+	mode, err := common.AesDecryptCtrMode(body, aesKey)
+	if err != nil {
+		println("decrypt error:", err.Error())
+		return nil
+	}
+	return mode
 }

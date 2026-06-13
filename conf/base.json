@@ -1,0 +1,30 @@
+{
+  "Debug": true,
+  "AppName": "socketserverframe",
+  "Version": "v0.1",
+  "MaxPackSize": 4096,
+  "MaxConn": 1000,
+  "WorkerPoolSize": 1000,
+  "WorkerTaskMaxLen": 1000,
+  "MaxMsgChanLen": 100,
+  "ProtocolIsJson": false,
+  "ServerTCP": {
+    "Address": "127.0.0.1",
+    "Port": "17001"
+  },
+  "ServerWS": {
+    "Address": "127.0.0.1",
+    "Port": "17002",
+    "TLSCertPath": "",
+    "TLSKeyPath": ""
+  },
+  "Redis": {
+    "Address": "127.0.0.1:6380",
+    "Password": "Abc123!@"
+  },
+  "Mysql": {
+    "Address": "",
+    "Username": "",
+    "Password": ""
+  }
+}

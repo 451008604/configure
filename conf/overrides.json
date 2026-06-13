@@ -1,0 +1,11 @@
+{
+  "127.0.0.1": {
+    "Debug": false
+  },
+  "172.25.0.2": {
+    "AppName": "custom-service",
+    "ServerTCP": {
+      "Port": "27001"
+    }
+  }
+}

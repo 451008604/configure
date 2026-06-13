@@ -1,0 +1,7 @@
+{
+  "__extends": "base.json",
+  "Debug": false,
+  "ServerTCP": {
+    "Port": "27001"
+  }
+}
